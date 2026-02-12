@@ -1,0 +1,73 @@
+-- 🔥 KILL AURA HUB 🔥
+-- Area 51 mob001 Auto Shooter + Teleport
+-- Paste directly into Bunni/Xeno executor
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local toolSlot1 = nil
+
+local function updateCharacter()
+    character = player.Character
+    if character then
+        humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+        local backpack = player.Backpack
+        toolSlot1 = backpack:FindFirstChildOfClass("Tool") or character:FindFirstChildOfClass("Tool")
+    end
+end
+
+player.CharacterAdded:Connect(updateCharacter)
+updateCharacter()
+
+local killAuraEnabled = false
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Insert then
+        killAuraEnabled = not killAuraEnabled
+        print("🔥 KILL AURA HUB:", killAuraEnabled and "ON" or "OFF")
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if not killAuraEnabled or not humanoidRootPart or not toolSlot1 then return end
+    
+    local nearestMob = nil
+    local shortestDistance = math.huge
+    
+    for _, obj in pairs(workspace:GetChildren()) do
+        if obj.Name == "mob001" and obj:FindFirstChild("HumanoidRootPart") and obj:FindFirstChild("Humanoid") then
+            if obj.Humanoid.Health > 0 then
+                local distance = (humanoidRootPart.Position - obj.HumanoidRootPart.Position).Magnitude
+                if distance < shortestDistance then
+                    shortestDistance = distance
+                    nearestMob = obj
+                end
+            end
+        end
+    end
+    
+    if nearestMob and nearestMob:FindFirstChild("HumanoidRootPart") then
+        local mobPos = nearestMob.HumanoidRootPart.Position
+        local teleportPos = mobPos + Vector3.new(0, 15, 0)
+        
+        humanoidRootPart.CFrame = CFrame.new(teleportPos, mobPos)
+        
+        humanoidRootPart.CFrame = CFrame.lookAt(humanoidRootPart.Position, mobPos)
+        
+        if toolSlot1.Parent ~= character then
+            toolSlot1.Parent = character
+        end
+        
+        mouse1click()
+        wait(0.05)
+        mouse1release()
+    end
+end)
+
+print("🎮 KILL AURA HUB LOADED!")
+print("👉 Press INSERT to toggle ON/OFF")
+print("⚡ Auto teleports above mob001 + shoots with slot 1 gun")
